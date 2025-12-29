@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>高雄市停車場資訊</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <h1>高雄市停車場資訊</h1>
+      <p class="subtitle">資料來源：高雄市政府交通局清冊（以現場公告為準）</p>
+    </div>
+  </header>
+
+  <main class="container layout">
+    <section class="filters" aria-label="篩選條件">
+      <div class="filter-group">
+        <label for="searchInput">搜尋（名稱/地址）</label>
+        <input id="searchInput" type="search" placeholder="輸入關鍵字" />
+      </div>
+
+      <div class="filter-group">
+        <label for="vehicleTypeSelect">停車種類</label>
+        <select id="vehicleTypeSelect">
+          <option value="all">全部</option>
+          <option value="car">汽車</option>
+          <option value="motor">機車</option>
+          <option value="both">汽車+機車</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">收費快速篩選</span>
+        <label class="checkbox">
+          <input id="diffPricing" type="checkbox" />
+          有平假日差異
+        </label>
+        <label class="checkbox">
+          <input id="hasMonthlyCap" type="checkbox" />
+          含月租/上限
+        </label>
+      </div>
+
+      <div class="filter-group">
+        <label for="sortSelect">排序</label>
+        <select id="sortSelect">
+          <option value="name">依名稱</option>
+          <option value="weekdayPrice">依平日費率（粗略）</option>
+        </select>
+      </div>
+
+      <div class="results" id="resultCount">共 0 筆，符合條件 0 筆</div>
+    </section>
+
+    <section class="list" aria-live="polite">
+      <div id="statusMessage" class="status">資料載入中...</div>
+      <div id="listContainer" class="list-container"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>資料檔下載：</p>
+      <div class="downloads">
+        <a href="./kaohsiung_parking_lots_2025-12-25_schema_placephoto_fallback.json" download>JSON（schema）</a>
+        <a href="./kaohsiung_parking_lots_2025-12-25_curated.json" download>JSON（curated）</a>
+        <a href="./kaohsiung_parking_lots_2025-12-25_curated.csv" download>CSV</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./assets/app.js" defer></script>
+</body>
+</html>
