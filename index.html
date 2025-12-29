@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>高雄市停車場資訊</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <p class="site-kicker">Kaohsiung Parking</p>
+      <h1>高雄市停車場資訊</h1>
+      <p class="site-subtitle">資料來源：高雄市政府交通局清冊（以現場公告為準）</p>
+      <div class="load-status" id="loadStatus" role="status" aria-live="polite"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel filters">
+      <div class="filters-header">
+        <h2>篩選條件</h2>
+        <p id="resultCount" class="result-count">共 0 筆，符合條件 0 筆</p>
+      </div>
+      <div class="filters-grid">
+        <label class="field">
+          <span>關鍵字搜尋</span>
+          <input type="search" id="searchInput" placeholder="輸入名稱或地址關鍵字" />
+        </label>
+        <label class="field">
+          <span>停車種類</span>
+          <select id="vehicleFilter">
+            <option value="all">全部</option>
+            <option value="car">汽車</option>
+            <option value="moto">機車</option>
+            <option value="both">汽車+機車</option>
+          </select>
+        </label>
+        <div class="field">
+          <span>收費類型</span>
+          <div class="checkbox-group">
+            <label><input type="checkbox" id="diffPricing" /> 有平假日差異</label>
+            <label><input type="checkbox" id="hasCap" /> 含月租/上限</label>
+          </div>
+        </div>
+        <label class="field">
+          <span>排序方式</span>
+          <select id="sortFilter">
+            <option value="name">依名稱排序</option>
+            <option value="weekday">依平日費率排序</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="panel list">
+      <div id="listContainer" class="list-container"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div>
+        <h3>資料檔下載</h3>
+        <p>
+          <a href="kaohsiung_parking_lots_2025-12-25_curated.csv" download>CSV 下載</a>
+          <span aria-hidden="true">｜</span>
+          <a href="kaohsiung_parking_lots_2025-12-25_schema_placephoto_fallback.json" download>JSON 下載</a>
+        </p>
+      </div>
+      <p class="footer-note">本頁為靜態展示，無需 API key 即可瀏覽。Google 圖片連結留有 <code>YOUR_API_KEY</code> 以便後續替換。</p>
+    </div>
+  </footer>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
