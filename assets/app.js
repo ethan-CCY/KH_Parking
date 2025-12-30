@@ -1,3 +1,5 @@
+const OVERRIDES_SOURCE = "overrides.json";
+
 const DATA_SOURCES = [
   "kaohsiung_parking_lots_2025-12-25_schema_placephoto_fallback.json",
   "kaohsiung_parking_lots_2025-12-25_curated.json",
@@ -35,6 +37,15 @@ function loadData() {
         return response.json();
       });
     });
+}
+
+function loadOverrides() {
+  return fetch(OVERRIDES_SOURCE)
+    .then((res) => {
+      if (!res.ok) return {};
+      return res.json();
+    })
+    .catch(() => ({}));
 }
 
 function normalizeItem(raw) {
@@ -300,17 +311,35 @@ function renderList(items) {
 }
 
 function initialize() {
-  loadData()
-    .then((data) => {
-      const list = Array.isArray(data) ? data : data.items || data.data || [];
-      state.rawItems = list;
-      state.items = list.map(normalizeItem);
-      elements.status.style.display = "none";
-      applyFilters();
-    })
-    .catch(() => {
-      elements.status.textContent = "資料載入失敗，請稍後再試。";
+  Promise.all([loadData(), loadOverrides()])
+  .then(([data, overrides]) => {
+    const list = Array.isArray(data) ? data : data.items || data.data || [];
+    state.rawItems = list;
+
+    const overrideMap = overrides && typeof overrides === "object" ? overrides : {};
+
+    state.items = list.map((raw) => {
+      const item = normalizeItem(raw);
+      const ov = overrideMap[item.name]; // overrides.json 用停車場名稱當 key
+
+      if (ov) {
+        // 你 Python 產出的欄位是 google_rating / google_review_count
+        item.googleRating = ov.google_rating ?? item.googleRating;
+        item.googleReviewCount = ov.google_review_count ?? item.googleReviewCount;
+
+        // 可選：存更新日期，之後想顯示可用
+        item.googleAsOf = ov.as_of ?? "";
+      }
+      return item;
     });
+
+    elements.status.style.display = "none";
+    applyFilters();
+  })
+  .catch(() => {
+    elements.status.textContent = "資料載入失敗，請稍後再試。";
+  });
+
 
   [
     elements.searchInput,
