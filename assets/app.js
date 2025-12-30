@@ -1,4 +1,5 @@
-const OVERRIDES_SOURCE = "overrides.json";
+const OVERRIDES_SOURCE = "./overrides.json";
+const DEBUG_OVERRIDES = false;
 
 const DATA_SOURCES = [
   "kaohsiung_parking_lots_2025-12-25_schema_placephoto_fallback.json",
@@ -46,6 +47,35 @@ function loadOverrides() {
       return res.json();
     })
     .catch(() => ({}));
+}
+
+function normalizeOverrideKey(name) {
+  return String(name || "")
+    .replace(/\s+/g, "")
+    .replace(/停車場/g, "")
+    .trim();
+}
+
+function buildOverrideMaps(overrides) {
+  const exact = new Map();
+  const relaxed = new Map();
+  const keys = [];
+
+  Object.entries(overrides || {}).forEach(([key, value]) => {
+    const trimmed = String(key || "").trim();
+    if (!trimmed) {
+      return;
+    }
+    exact.set(trimmed, value);
+    keys.push(trimmed);
+
+    const relaxedKey = normalizeOverrideKey(trimmed);
+    if (relaxedKey && !relaxed.has(relaxedKey)) {
+      relaxed.set(relaxedKey, value);
+    }
+  });
+
+  return { exact, relaxed, keys };
 }
 
 function normalizeItem(raw) {
@@ -317,10 +347,17 @@ function initialize() {
     state.rawItems = list;
 
     const overrideMap = overrides && typeof overrides === "object" ? overrides : {};
+    const overrideMaps = buildOverrideMaps(overrideMap);
+    const unmatchedNames = [];
 
     state.items = list.map((raw) => {
       const item = normalizeItem(raw);
-      const ov = overrideMap[item.name]; // overrides.json 用停車場名稱當 key
+      const key = (item.name || "").trim();
+      let ov = overrideMaps.exact.get(key);
+      if (!ov) {
+        const relaxedKey = normalizeOverrideKey(key);
+        ov = overrideMaps.relaxed.get(relaxedKey);
+      }
 
       if (ov) {
         // 你 Python 產出的欄位是 google_rating / google_review_count
@@ -329,9 +366,21 @@ function initialize() {
 
         // 可選：存更新日期，之後想顯示可用
         item.googleAsOf = ov.as_of ?? "";
+      } else if (item.name) {
+        unmatchedNames.push(item.name);
       }
       return item;
     });
+
+    if (DEBUG_OVERRIDES) {
+      console.log("overrides keys (first 5):", overrideMaps.keys.slice(0, 5));
+      console.log("first item name:", state.items[0]?.name);
+      console.log("first item googleRating:", state.items[0]?.googleRating);
+    }
+
+    if (unmatchedNames.length) {
+      console.log("未匹配清單", unmatchedNames);
+    }
 
     elements.status.style.display = "none";
     applyFilters();
