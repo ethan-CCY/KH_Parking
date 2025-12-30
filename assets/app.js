@@ -82,33 +82,11 @@ function normalizeItem(raw) {
 }
 
 function getThumbnailUrl(item) {
-  const thumbnail = item.thumbnail || {};
-  const placePhoto = thumbnail.place_photo || {};
-  const templates = placePhoto.templates || {};
-
-  if (placePhoto.url) {
-    return placePhoto.url;
+  if (item.thumbnailLocalUrl) {
+    return item.thumbnailLocalUrl;
   }
 
-  if (placePhoto.photo_reference && templates.classic_photoreference_url_template) {
-    return templates.classic_photoreference_url_template.replace(
-      "PHOTO_REFERENCE",
-      placePhoto.photo_reference
-    );
-  }
-
-  if (placePhoto.photo_resource_name && templates.new_photo_resource_url_template) {
-    return templates.new_photo_resource_url_template.replace(
-      "PHOTO_RESOURCE_NAME",
-      placePhoto.photo_resource_name
-    );
-  }
-
-  if (thumbnail.street_view?.url) {
-    return thumbnail.street_view.url;
-  }
-
-  return "";
+  return null;
 }
 
 function normalizeVehicleTypes(value) {
@@ -222,17 +200,29 @@ function renderList(items) {
         card.className = "card";
 
         const thumbUrl = getThumbnailUrl(item);
+        const img = document.createElement("img");
+        img.alt = `${item.name} 縮圖`;
+        img.loading = "lazy";
+
+        const placeholder = document.createElement("div");
+        placeholder.className = "placeholder";
+        placeholder.textContent = "No Image";
+
         if (thumbUrl) {
-          const img = document.createElement("img");
           img.src = thumbUrl;
-          img.alt = `${item.name} 縮圖`;
-          card.appendChild(img);
+          placeholder.style.display = "none";
         } else {
-          const placeholder = document.createElement("div");
-          placeholder.className = "placeholder";
-          placeholder.textContent = "No Image";
-          card.appendChild(placeholder);
+          img.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+          img.style.display = "none";
+          placeholder.style.display = "flex";
         }
+
+        img.addEventListener("error", () => {
+          img.style.display = "none";
+          placeholder.style.display = "flex";
+        });
+
+        card.append(img, placeholder);
 
         const body = document.createElement("div");
         body.className = "card-body";
@@ -329,6 +319,10 @@ function initialize() {
 
         // 可選：存更新日期，之後想顯示可用
         item.googleAsOf = ov.as_of ?? "";
+
+        item.thumbnailLocalUrl = ov.thumbnail_url ?? "";
+      } else {
+        item.thumbnailLocalUrl = "";
       }
       return item;
     });
