@@ -112,7 +112,7 @@ KH_Parking/
 
 ---
 
-### 6. 圖片顯示策略（不依賴第三方 API）
+### 6. 圖片顯示策略（不依賴第三方 API） (未完成，還在進行中)
 
 - 不使用 Google Street View / Place Photo API
 - 圖片來源：
