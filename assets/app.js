@@ -11,6 +11,10 @@ const state = {
   items: [],
 };
 
+const PLACEHOLDER_IMAGE = `data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="No Image"><rect width="100%" height="100%" fill="#dfe4ec"/><text x="50%" y="50%" font-family="Arial, sans-serif" font-size="36" fill="#5b6472" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>'
+)}`;
+
 const elements = {
   searchInput: document.getElementById("searchInput"),
   vehicleType: document.getElementById("vehicleType"),
@@ -91,6 +95,7 @@ function normalizeItem(raw) {
       googleReviewCount: raw.google?.review_count || "",
       mapsUrl: raw.google?.maps_url || "",
       thumbnail: raw.thumbnail || {},
+      thumbnailLocalUrl: "",
     };
   }
 
@@ -103,42 +108,16 @@ function normalizeItem(raw) {
     googleRating: raw.google_rating || "",
     googleReviewCount: raw.google_review_count || "",
     mapsUrl: raw.google_maps_url || "",
-    thumbnail: {
-      street_view: {
-        url: raw.street_view_thumbnail_url || "",
-      },
-    },
+    thumbnail: raw.thumbnail || {},
+    thumbnailLocalUrl: "",
   };
 }
 
 function getThumbnailUrl(item) {
-  const thumbnail = item.thumbnail || {};
-  const placePhoto = thumbnail.place_photo || {};
-  const templates = placePhoto.templates || {};
-
-  if (placePhoto.url) {
-    return placePhoto.url;
+  if (item.thumbnailLocalUrl) {
+    return item.thumbnailLocalUrl;
   }
-
-  if (placePhoto.photo_reference && templates.classic_photoreference_url_template) {
-    return templates.classic_photoreference_url_template.replace(
-      "PHOTO_REFERENCE",
-      placePhoto.photo_reference
-    );
-  }
-
-  if (placePhoto.photo_resource_name && templates.new_photo_resource_url_template) {
-    return templates.new_photo_resource_url_template.replace(
-      "PHOTO_RESOURCE_NAME",
-      placePhoto.photo_resource_name
-    );
-  }
-
-  if (thumbnail.street_view?.url) {
-    return thumbnail.street_view.url;
-  }
-
-  return "";
+  return null;
 }
 
 function normalizeVehicleTypes(value) {
@@ -252,17 +231,18 @@ function renderList(items) {
         card.className = "card";
 
         const thumbUrl = getThumbnailUrl(item);
-        if (thumbUrl) {
-          const img = document.createElement("img");
-          img.src = thumbUrl;
-          img.alt = `${item.name} 縮圖`;
-          card.appendChild(img);
-        } else {
-          const placeholder = document.createElement("div");
-          placeholder.className = "placeholder";
-          placeholder.textContent = "No Image";
-          card.appendChild(placeholder);
-        }
+        const img = document.createElement("img");
+        img.alt = thumbUrl ? `${item.name} 縮圖` : "No Image";
+        img.src = thumbUrl || PLACEHOLDER_IMAGE;
+        img.onerror = () => {
+          if (img.dataset.fallbackApplied) {
+            return;
+          }
+          img.dataset.fallbackApplied = "true";
+          img.src = PLACEHOLDER_IMAGE;
+          img.alt = "No Image";
+        };
+        card.appendChild(img);
 
         const body = document.createElement("div");
         body.className = "card-body";
@@ -363,6 +343,7 @@ function initialize() {
         // 你 Python 產出的欄位是 google_rating / google_review_count
         item.googleRating = ov.google_rating ?? item.googleRating;
         item.googleReviewCount = ov.google_review_count ?? item.googleReviewCount;
+        item.thumbnailLocalUrl = ov.thumbnail_url ?? item.thumbnailLocalUrl;
 
         // 可選：存更新日期，之後想顯示可用
         item.googleAsOf = ov.as_of ?? "";
